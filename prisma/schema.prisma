@@ -1,0 +1,71 @@
+// Movie Fantasy League — Prisma schema
+// SQLite for local dev. Swap provider to "postgresql" for production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Manager {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  films     Film[]
+  createdAt DateTime @default(now())
+}
+
+model Film {
+  id                String       @id @default(cuid())
+  title             String
+  releaseDate       DateTime?
+  productionBudget  Int?
+  isSequel          Boolean      @default(false)
+  isRosterStarter   Boolean      @default(true)
+  manager           Manager      @relation(fields: [managerId], references: [id])
+  managerId         String
+  auctionPrice      Int
+  scoreEvents       ScoreEvent[]
+  createdAt         DateTime     @default(now())
+
+  @@index([managerId])
+}
+
+model ScoreEvent {
+  id          String    @id @default(cuid())
+  film        Film      @relation(fields: [filmId], references: [id])
+  filmId      String
+  category    String
+  rawPoints   Float
+  multiplier  Float     @default(1.0)
+  finalPoints Float
+  sourceUrl   String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  reversedAt  DateTime?
+
+  @@index([filmId])
+  @@index([category])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  payload   String   // JSON-encoded; SQLite has no native JSON type
+  createdAt DateTime @default(now())
+}
+
+model LeagueConfig {
+  id                       String   @id @default("singleton")
+  seasonYear               Int
+  draftDate                DateTime
+  excludePreDraftReleases  Boolean  @default(true)
+  excludedCeremonies       String   // JSON array
+  rosterSize               Int      @default(8)
+  starterCount             Int      @default(6)
+  budgetCap                Int      @default(200)
+  sequelCap                Int      @default(3)
+  updatedAt                DateTime @updatedAt
+}
