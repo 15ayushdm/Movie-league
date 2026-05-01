@@ -13,3 +13,4 @@ prisma/prisma/
 .turbo
 coverage
 *.tsbuildinfo
+screenshots/
